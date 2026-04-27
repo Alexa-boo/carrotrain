@@ -448,7 +448,7 @@ body {
     <svg width="110" height="70" viewBox="0 0 110 70" style="position:absolute;bottom:47%;right:2%;z-index:7"><circle cx="29" cy="55" r="29" fill="#487010"/><circle cx="81" cy="55" r="29" fill="#487010"/><circle cx="55" cy="42" r="38" fill="#487010"/><circle cx="29" cy="50" r="27" fill="#80aa18"/><circle cx="81" cy="50" r="27" fill="#80aa18"/><circle cx="55" cy="37" r="36" fill="#9ecc22"/><circle cx="72" cy="23" r="16" fill="#bce038" opacity="0.55"/></svg>
     <div class="cloud" style="top:7%;left:8%;width:110px;height:38px"></div>
     <div class="cloud" style="top:14%;left:52%;width:140px;height:44px"></div>
-    <img src="images/sad.png" style="width:280px;height:280px;object-fit:contain">
+    <img id="gameover-bunny" src="images/sad.png" style="width:280px;height:280px;object-fit:contain">
     <h1 id="txt-gameover">Game Over!</h1>
     <p id="txt-round-reached" style="font-size:20px;color:#ffcc00"></p>
     <p><span id="txt-caught">Carrots caught:</span> <strong id="final-score" style="font-size:32px;color:#ffcc00">0</strong></p>
@@ -857,6 +857,7 @@ function endGame() {
   document.getElementById('txt-round-reached').textContent = `${t.round} ${round}`;
   const isNew = saveBest(score, round);
   const best  = loadBest();
+  document.getElementById('gameover-bunny').src = isNew ? 'images/bunny_trophy.png' : 'images/sad.png';
   document.getElementById('txt-newrecord').textContent    = isNew ? t.newrecord : '';
   document.getElementById('txt-best-gameover').innerHTML = best ? `<img src="images/trophy.png" style="width:52px;height:52px;object-fit:contain"> ${t.best}: ${best.score} (${t.round} ${best.round})` : '';
   gameoverScreen.style.display = 'flex';
