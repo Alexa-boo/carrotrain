@@ -813,9 +813,9 @@ function spawnCarrot(forceX) {
 }
 
 function spawnTwoCarrots() {
-  const w  = W();
-  const x1 = 20 + Math.random() * (w * 0.25 - CARROT_W);
-  const x2 = w * 0.6 + Math.random() * (w * 0.25 - CARROT_W);
+  const half = Math.floor(W() / 2);
+  const x1 = 20 + Math.random() * (half - CARROT_W - 20);
+  const x2 = half + 10 + Math.random() * (half - CARROT_W - 30);
   spawnCarrot(x1);
   spawnCarrot(x2);
 }
