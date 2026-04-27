@@ -762,6 +762,7 @@ function tick(now) {
         rocks.splice(i, 1);
         lives--;
         showMinus(r.x, r.y);
+        showStars();
         hitThisFrame = true;
         plusOne.style.transition = 'none';
         plusOne.style.opacity = '0';
