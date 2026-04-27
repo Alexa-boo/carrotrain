@@ -1,0 +1,975 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#5bb8f5">
+<title>Carrot Rain 🥕</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html {
+  background: #5bb8f5;
+}
+
+body {
+  overflow: hidden;
+  font-family: 'Nunito', 'Arial Rounded MT Bold', Arial, sans-serif;
+  touch-action: none;
+  user-select: none;
+}
+
+#game {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(to bottom,
+    #5bb8f5 0%,
+    #a8dff5 55%,
+    #7bc47f 55%,
+    #5aaa5a 100%
+  );
+  overflow: hidden;
+}
+
+.cloud {
+  position: absolute;
+  background: linear-gradient(to bottom, #ffffff 0%, #e8f4ff 60%, #cce0f5 100%);
+  border-radius: 50px;
+  opacity: 0.92;
+  box-shadow: inset 0 -6px 12px rgba(100,150,200,0.25), 0 4px 12px rgba(80,120,180,0.18);
+}
+.cloud::before {
+  content: '';
+  position: absolute;
+  background: linear-gradient(to bottom, #ffffff 0%, #ddeeff 100%);
+  border-radius: 50%;
+  width: 60%;
+  height: 160%;
+  top: -60%;
+  left: 20%;
+  box-shadow: inset 0 -4px 8px rgba(100,150,200,0.2);
+}
+.cloud::after {
+  content: '';
+  position: absolute;
+  background: linear-gradient(to bottom, #ffffff 0%, #ddeeff 100%);
+  border-radius: 50%;
+  width: 40%;
+  height: 130%;
+  top: -50%;
+  left: 50%;
+  box-shadow: inset 0 -4px 8px rgba(100,150,200,0.2);
+}
+
+.grass-stripe {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 18%;
+  background: repeating-linear-gradient(
+    90deg,
+    #5aaa5a 0px, #5aaa5a 18px,
+    #4d9a4d 18px, #4d9a4d 36px
+  );
+  opacity: 0.4;
+}
+
+
+.tree {
+  position: absolute;
+  z-index: 3;
+}
+.tree-trunk {
+  width: 22px;
+  background: #8B5E3C;
+  border-radius: 4px;
+  margin: 0 auto;
+}
+.tree-top {
+  border-radius: 50% 50% 45% 45%;
+  margin: 0 auto;
+}
+.bush {
+  position: absolute;
+  border-radius: 50% 50% 40% 40%;
+  z-index: 4;
+}
+.bush::before, .bush::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  background: inherit;
+}
+.bush::before {
+  width: 65%;
+  height: 90%;
+  top: -30%;
+  left: -10%;
+}
+.bush::after {
+  width: 60%;
+  height: 85%;
+  top: -25%;
+  right: -5%;
+}
+
+#bunny {
+  position: absolute;
+  width: 200px;
+  height: 200px;
+  object-fit: contain;
+  z-index: 10;
+  bottom: 12%;
+}
+
+.stars-container {
+  position: absolute;
+  width: 0;
+  height: 0;
+  animation: starspin 1.3s ease-out forwards;
+  z-index: 50;
+  pointer-events: none;
+}
+.stars-container span {
+  position: absolute;
+  font-size: 22px;
+  color: #FFD700;
+  text-shadow: 0 0 8px rgba(255,200,0,0.9);
+  transform: rotate(calc(var(--i) * 90deg)) translateY(-42px) rotate(calc(var(--i) * -90deg));
+}
+@keyframes starspin {
+  0%   { transform: rotate(0deg);   opacity: 1; }
+  75%  { opacity: 1; }
+  100% { transform: rotate(420deg); opacity: 0; }
+}
+
+.rock {
+  position: absolute;
+  width: 52px;
+  height: 52px;
+  z-index: 15;
+  pointer-events: none;
+}
+
+.carrot {
+  position: absolute;
+  width: 90px;
+  height: 90px;
+  object-fit: contain;
+  z-index: 16;
+}
+.carrot-active {
+  animation: carrot-pulse 0.7s ease-in-out infinite alternate;
+}
+.carrot-dim {
+  opacity: 0.35;
+}
+@keyframes carrot-pulse {
+  from { filter: drop-shadow(0 0 4px rgba(255,220,0,0.5)); }
+  to   { filter: drop-shadow(0 0 14px rgba(255,160,0,1)) drop-shadow(0 0 5px rgba(255,255,100,0.7)); }
+}
+
+#hud {
+  position: absolute;
+  top: 14px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 18px;
+  z-index: 20;
+}
+
+.hud-box {
+  font-size: 22px;
+  font-weight: bold;
+  color: #fff;
+  text-shadow: 1px 2px 6px rgba(0,0,0,0.4);
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.screen {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(to bottom, #5bb8f5 0%, #a8dff5 50%, #6abf6a 50%, #4a9a4a 100%);
+  z-index: 100;
+  gap: 16px;
+}
+
+.screen h1 {
+  font-size: 42px;
+  color: #fff;
+  text-shadow: 2px 3px 10px rgba(0,0,0,0.5);
+  text-align: center;
+}
+
+.screen p {
+  font-size: 20px;
+  color: #ffe;
+  text-shadow: 1px 1px 5px rgba(0,0,0,0.4);
+  text-align: center;
+}
+
+.btn {
+  background: linear-gradient(135deg, #ff9900, #ff6600);
+  color: white;
+  border: none;
+  border-radius: 35px;
+  padding: 16px 55px;
+  font-size: 26px;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0 5px 18px rgba(0,0,0,0.35);
+  margin-top: 4px;
+}
+.btn:active { transform: scale(0.95); }
+
+/* Language switcher */
+#lang-switcher {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.lang-btn {
+  background: rgba(255,255,255,0.2);
+  border: 2px solid rgba(255,255,255,0.5);
+  color: white;
+  border-radius: 20px;
+  padding: 5px 14px;
+  font-size: 15px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.lang-btn:hover, .lang-btn.active {
+  background: rgba(255,255,255,0.45);
+  border-color: white;
+}
+
+.screen svg, #game > svg {
+  filter: drop-shadow(0 10px 8px rgba(0,0,0,0.3));
+}
+
+.screen > *:not(svg):not(.cloud) {
+  position: relative;
+  z-index: 10;
+}
+
+#plus-one {
+  position: absolute;
+  font-size: 20px;
+  font-weight: bold;
+  color: #ff6600;
+  text-shadow: 1px 1px 3px rgba(255,255,255,0.8);
+  pointer-events: none;
+  z-index: 50;
+  opacity: 0;
+}
+</style>
+</head>
+<body>
+<div id="game">
+
+  <div class="cloud" style="top:7%;left:8%;width:110px;height:38px"></div>
+  <div class="cloud" style="top:14%;left:52%;width:140px;height:44px"></div>
+  <div class="cloud" style="top:5%;left:72%;width:90px;height:30px"></div>
+  <!-- Game field trees -->
+  <svg width="195" height="243" viewBox="0 0 130 162" style="position:absolute;bottom:45%;left:0;z-index:2"><rect x="56" y="124" width="18" height="38" rx="5" fill="#a05030"/><circle cx="34" cy="114" r="35" fill="#2a6828"/><circle cx="96" cy="114" r="35" fill="#2a6828"/><circle cx="65" cy="90" r="46" fill="#2a6828"/><circle cx="34" cy="110" r="33" fill="#4aaa48"/><circle cx="96" cy="110" r="33" fill="#4aaa48"/><circle cx="65" cy="86" r="44" fill="#54b850"/><circle cx="21" cy="95" r="15" fill="#80d060" opacity="0.55"/><circle cx="52" cy="68" r="19" fill="#80d060" opacity="0.5"/></svg>
+  <svg width="78" height="218" viewBox="0 0 52 145" style="position:absolute;bottom:45%;left:10%;z-index:3"><rect x="21" y="116" width="10" height="29" rx="3" fill="#a05030"/><polygon points="26,6 2,116 50,116" fill="#246024"/><polygon points="26,6 4,96 48,96" fill="#38942a"/><polygon points="26,6 7,74 45,74" fill="#4ab838"/><polygon points="26,6 11,52 41,52" fill="#5aca44"/></svg>
+  <svg width="123" height="198" viewBox="0 0 82 132" style="position:absolute;bottom:45%;left:17%;z-index:4"><rect x="34" y="100" width="14" height="32" rx="4" fill="#c06838"/><circle cx="41" cy="77" r="43" fill="#2a6828"/><circle cx="41" cy="74" r="41" fill="#52aa4a"/><circle cx="28" cy="60" r="18" fill="#80cc58" opacity="0.55"/></svg>
+  <svg width="123" height="198" viewBox="0 0 82 132" style="position:absolute;bottom:45%;right:17%;z-index:4"><rect x="34" y="100" width="14" height="32" rx="4" fill="#c06838"/><circle cx="41" cy="77" r="43" fill="#4a7a15"/><circle cx="41" cy="74" r="41" fill="#88b820"/><circle cx="28" cy="60" r="18" fill="#aad030" opacity="0.55"/></svg>
+  <svg width="78" height="218" viewBox="0 0 52 145" style="position:absolute;bottom:45%;right:10%;z-index:3"><rect x="21" y="116" width="10" height="29" rx="3" fill="#a05030"/><polygon points="26,6 2,116 50,116" fill="#246024"/><polygon points="26,6 4,96 48,96" fill="#38942a"/><polygon points="26,6 7,74 45,74" fill="#4ab838"/><polygon points="26,6 11,52 41,52" fill="#5aca44"/></svg>
+  <svg width="195" height="243" viewBox="0 0 130 162" style="position:absolute;bottom:45%;right:0;z-index:2"><rect x="56" y="124" width="18" height="38" rx="5" fill="#a05030"/><circle cx="34" cy="114" r="35" fill="#2a6828"/><circle cx="96" cy="114" r="35" fill="#2a6828"/><circle cx="65" cy="90" r="46" fill="#2a6828"/><circle cx="34" cy="110" r="33" fill="#4aaa48"/><circle cx="96" cy="110" r="33" fill="#4aaa48"/><circle cx="65" cy="86" r="44" fill="#54b850"/><circle cx="108" cy="95" r="15" fill="#80d060" opacity="0.55"/><circle cx="78" cy="68" r="19" fill="#80d060" opacity="0.5"/></svg>
+  <!-- Bushes foreground -->
+  <svg width="110" height="70" viewBox="0 0 110 70" style="position:absolute;bottom:45%;left:2%;z-index:7"><circle cx="29" cy="55" r="29" fill="#884010"/><circle cx="81" cy="55" r="29" fill="#884010"/><circle cx="55" cy="42" r="38" fill="#884010"/><circle cx="29" cy="50" r="27" fill="#cc6020"/><circle cx="81" cy="50" r="27" fill="#cc6020"/><circle cx="55" cy="37" r="36" fill="#e87830"/><circle cx="38" cy="23" r="16" fill="#f8a850" opacity="0.55"/></svg>
+  <svg width="82" height="54" viewBox="0 0 82 54" style="position:absolute;bottom:45%;left:25%;z-index:7"><circle cx="21" cy="43" r="21" fill="#145448"/><circle cx="61" cy="43" r="21" fill="#145448"/><circle cx="41" cy="31" r="28" fill="#145448"/><circle cx="21" cy="39" r="19" fill="#1e8870"/><circle cx="61" cy="39" r="19" fill="#1e8870"/><circle cx="41" cy="27" r="26" fill="#28a888"/><circle cx="28" cy="14" r="11" fill="#4ec8a8" opacity="0.55"/></svg>
+  <svg width="82" height="54" viewBox="0 0 82 54" style="position:absolute;bottom:45%;right:25%;z-index:7"><circle cx="21" cy="43" r="21" fill="#786010"/><circle cx="61" cy="43" r="21" fill="#786010"/><circle cx="41" cy="31" r="28" fill="#786010"/><circle cx="21" cy="39" r="19" fill="#bcaa18"/><circle cx="61" cy="39" r="19" fill="#bcaa18"/><circle cx="41" cy="27" r="26" fill="#d8c225"/><circle cx="28" cy="14" r="11" fill="#eeda40" opacity="0.55"/></svg>
+  <svg width="110" height="70" viewBox="0 0 110 70" style="position:absolute;bottom:45%;right:2%;z-index:7"><circle cx="29" cy="55" r="29" fill="#487010"/><circle cx="81" cy="55" r="29" fill="#487010"/><circle cx="55" cy="42" r="38" fill="#487010"/><circle cx="29" cy="50" r="27" fill="#80aa18"/><circle cx="81" cy="50" r="27" fill="#80aa18"/><circle cx="55" cy="37" r="36" fill="#9ecc22"/><circle cx="72" cy="23" r="16" fill="#bce038" opacity="0.55"/></svg>
+  <!-- Bushes ground level sides -->
+  <svg width="115" height="74" viewBox="0 0 115 74" style="position:absolute;bottom:18%;left:0;z-index:8"><circle cx="30" cy="58" r="30" fill="#145448"/><circle cx="85" cy="58" r="30" fill="#145448"/><circle cx="57" cy="44" r="40" fill="#145448"/><circle cx="30" cy="53" r="28" fill="#1e8870"/><circle cx="85" cy="53" r="28" fill="#1e8870"/><circle cx="57" cy="39" r="38" fill="#28a888"/><circle cx="40" cy="24" r="17" fill="#4ec8a8" opacity="0.55"/></svg>
+  <svg width="80" height="52" viewBox="0 0 80 52" style="position:absolute;bottom:18%;left:10%;z-index:8"><circle cx="20" cy="41" r="20" fill="#786010"/><circle cx="60" cy="41" r="20" fill="#786010"/><circle cx="40" cy="29" r="27" fill="#786010"/><circle cx="20" cy="37" r="18" fill="#bcaa18"/><circle cx="60" cy="37" r="18" fill="#bcaa18"/><circle cx="40" cy="25" r="25" fill="#d8c225"/><circle cx="28" cy="14" r="11" fill="#eeda40" opacity="0.55"/></svg>
+  <svg width="80" height="52" viewBox="0 0 80 52" style="position:absolute;bottom:18%;right:10%;z-index:8"><circle cx="20" cy="41" r="20" fill="#884010"/><circle cx="60" cy="41" r="20" fill="#884010"/><circle cx="40" cy="29" r="27" fill="#884010"/><circle cx="20" cy="37" r="18" fill="#cc6020"/><circle cx="60" cy="37" r="18" fill="#cc6020"/><circle cx="40" cy="25" r="25" fill="#e87830"/><circle cx="28" cy="14" r="11" fill="#f8a850" opacity="0.55"/></svg>
+  <svg width="115" height="74" viewBox="0 0 115 74" style="position:absolute;bottom:18%;right:0;z-index:8"><circle cx="30" cy="58" r="30" fill="#487010"/><circle cx="85" cy="58" r="30" fill="#487010"/><circle cx="57" cy="44" r="40" fill="#487010"/><circle cx="30" cy="53" r="28" fill="#80aa18"/><circle cx="85" cy="53" r="28" fill="#80aa18"/><circle cx="57" cy="39" r="38" fill="#9ecc22"/><circle cx="74" cy="24" r="17" fill="#bce038" opacity="0.55"/></svg>
+  <!-- Grass field effects -->
+  <!-- Tufts -->
+  <svg width="22" height="34" viewBox="0 0 22 34" style="position:absolute;bottom:28%;left:20%;z-index:6">
+    <path d="M6,34 C3,22 1,10 4,1 C5,10 7,22 7,34Z" fill="#2a7c28"/>
+    <path d="M11,34 C10,20 10,7 11,0 C12,7 12,20 12,34Z" fill="#44aa40"/>
+    <path d="M16,34 C19,22 21,10 18,1 C17,10 15,22 15,34Z" fill="#2a7c28"/>
+  </svg>
+  <svg width="30" height="44" viewBox="0 0 30 44" style="position:absolute;bottom:25%;left:40%;z-index:6">
+    <path d="M4,44 C1,30 -1,14 3,1 C4,14 6,30 5,44Z" fill="#267024"/>
+    <path d="M9,44 C8,28 7,10 9,0 C10,10 11,28 10,44Z" fill="#40a038"/>
+    <path d="M15,44 C14,26 14,9 15,0 C16,9 16,26 16,44Z" fill="#52b848"/>
+    <path d="M21,44 C22,28 23,10 21,0 C20,10 19,28 20,44Z" fill="#40a038"/>
+    <path d="M26,44 C29,30 31,14 27,1 C26,14 24,30 25,44Z" fill="#267024"/>
+  </svg>
+  <svg width="22" height="34" viewBox="0 0 22 34" style="position:absolute;bottom:27%;left:58%;z-index:6">
+    <path d="M6,34 C3,22 1,10 4,1 C5,10 7,22 7,34Z" fill="#2a7c28"/>
+    <path d="M11,34 C10,20 10,7 11,0 C12,7 12,20 12,34Z" fill="#44aa40"/>
+    <path d="M16,34 C19,22 21,10 18,1 C17,10 15,22 15,34Z" fill="#2a7c28"/>
+  </svg>
+  <svg width="30" height="44" viewBox="0 0 30 44" style="position:absolute;bottom:24%;right:35%;z-index:6">
+    <path d="M4,44 C1,30 -1,14 3,1 C4,14 6,30 5,44Z" fill="#267024"/>
+    <path d="M9,44 C8,28 7,10 9,0 C10,10 11,28 10,44Z" fill="#40a038"/>
+    <path d="M15,44 C14,26 14,9 15,0 C16,9 16,26 16,44Z" fill="#52b848"/>
+    <path d="M21,44 C22,28 23,10 21,0 C20,10 19,28 20,44Z" fill="#40a038"/>
+    <path d="M26,44 C29,30 31,14 27,1 C26,14 24,30 25,44Z" fill="#267024"/>
+  </svg>
+  <svg width="22" height="34" viewBox="0 0 22 34" style="position:absolute;bottom:29%;right:18%;z-index:6">
+    <path d="M6,34 C3,22 1,10 4,1 C5,10 7,22 7,34Z" fill="#2a7c28"/>
+    <path d="M11,34 C10,20 10,7 11,0 C12,7 12,20 12,34Z" fill="#44aa40"/>
+    <path d="M16,34 C19,22 21,10 18,1 C17,10 15,22 15,34Z" fill="#2a7c28"/>
+  </svg>
+  <!-- Clovers -->
+  <svg width="20" height="26" viewBox="0 0 20 26" style="position:absolute;bottom:26%;left:50%;z-index:6">
+    <line x1="10" y1="16" x2="10" y2="26" stroke="#3a8828" stroke-width="2" stroke-linecap="round"/>
+    <circle cx="10" cy="6"  r="5" fill="#3aaa38" opacity="0.9"/>
+    <circle cx="4"  cy="13" r="5" fill="#3aaa38" opacity="0.9"/>
+    <circle cx="16" cy="13" r="5" fill="#3aaa38" opacity="0.9"/>
+    <circle cx="10" cy="6"  r="3.5" fill="#52c450"/>
+    <circle cx="4"  cy="13" r="3.5" fill="#52c450"/>
+    <circle cx="16" cy="13" r="3.5" fill="#52c450"/>
+  </svg>
+  <svg width="20" height="26" viewBox="0 0 20 26" style="position:absolute;bottom:27%;right:48%;z-index:6">
+    <line x1="10" y1="16" x2="10" y2="26" stroke="#3a8828" stroke-width="2" stroke-linecap="round"/>
+    <circle cx="10" cy="6"  r="5" fill="#3aaa38" opacity="0.9"/>
+    <circle cx="4"  cy="13" r="5" fill="#3aaa38" opacity="0.9"/>
+    <circle cx="16" cy="13" r="5" fill="#3aaa38" opacity="0.9"/>
+    <circle cx="10" cy="6"  r="3.5" fill="#52c450"/>
+    <circle cx="4"  cy="13" r="3.5" fill="#52c450"/>
+    <circle cx="16" cy="13" r="3.5" fill="#52c450"/>
+  </svg>
+    <div id="hud">
+    <div class="hud-box">
+      <img src="images/carrot.png" style="width:84px;height:84px;object-fit:contain;mix-blend-mode:multiply">
+      <span id="score">0</span><span style="opacity:0.7;font-size:18px">/<span id="target">10</span></span>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:2px">
+      <div class="hud-box" style="justify-content:center;font-size:18px;opacity:0.9" id="round-display">Round 1</div>
+      <div class="hud-box" id="lives-display"></div>
+    </div>
+    <button onclick="quitGame()" style="background:rgba(0,0,0,0.35);border:none;border-radius:50%;width:48px;height:48px;font-size:22px;cursor:pointer;color:white;line-height:1">✕</button>
+  </div>
+
+  <img id="bunny" src="images/1.png" alt="bunny">
+  <div id="plus-one">+1</div>
+
+  <!-- Start screen -->
+  <div class="screen" id="start-screen">
+    <!-- Trees -->
+    <svg width="195" height="243" viewBox="0 0 130 162" style="position:absolute;bottom:47%;left:0;z-index:2"><rect x="56" y="124" width="18" height="38" rx="5" fill="#a05030"/><circle cx="34" cy="114" r="35" fill="#2a6828"/><circle cx="96" cy="114" r="35" fill="#2a6828"/><circle cx="65" cy="90" r="46" fill="#2a6828"/><circle cx="34" cy="110" r="33" fill="#4aaa48"/><circle cx="96" cy="110" r="33" fill="#4aaa48"/><circle cx="65" cy="86" r="44" fill="#54b850"/><circle cx="21" cy="95" r="15" fill="#80d060" opacity="0.55"/><circle cx="52" cy="68" r="19" fill="#80d060" opacity="0.5"/></svg>
+    <svg width="78" height="218" viewBox="0 0 52 145" style="position:absolute;bottom:47%;left:10%;z-index:3"><rect x="21" y="116" width="10" height="29" rx="3" fill="#a05030"/><polygon points="26,6 2,116 50,116" fill="#246024"/><polygon points="26,6 4,96 48,96" fill="#38942a"/><polygon points="26,6 7,74 45,74" fill="#4ab838"/><polygon points="26,6 11,52 41,52" fill="#5aca44"/></svg>
+    <svg width="123" height="198" viewBox="0 0 82 132" style="position:absolute;bottom:47%;left:17%;z-index:4"><rect x="34" y="100" width="14" height="32" rx="4" fill="#c06838"/><circle cx="41" cy="77" r="43" fill="#2a6828"/><circle cx="41" cy="74" r="41" fill="#52aa4a"/><circle cx="28" cy="60" r="18" fill="#80cc58" opacity="0.55"/></svg>
+    <svg width="123" height="198" viewBox="0 0 82 132" style="position:absolute;bottom:47%;right:17%;z-index:4"><rect x="34" y="100" width="14" height="32" rx="4" fill="#c06838"/><circle cx="41" cy="77" r="43" fill="#4a7a15"/><circle cx="41" cy="74" r="41" fill="#88b820"/><circle cx="28" cy="60" r="18" fill="#aad030" opacity="0.55"/></svg>
+    <svg width="78" height="218" viewBox="0 0 52 145" style="position:absolute;bottom:47%;right:10%;z-index:3"><rect x="21" y="116" width="10" height="29" rx="3" fill="#a05030"/><polygon points="26,6 2,116 50,116" fill="#246024"/><polygon points="26,6 4,96 48,96" fill="#38942a"/><polygon points="26,6 7,74 45,74" fill="#4ab838"/><polygon points="26,6 11,52 41,52" fill="#5aca44"/></svg>
+    <svg width="195" height="243" viewBox="0 0 130 162" style="position:absolute;bottom:47%;right:0;z-index:2"><rect x="56" y="124" width="18" height="38" rx="5" fill="#a05030"/><circle cx="34" cy="114" r="35" fill="#2a6828"/><circle cx="96" cy="114" r="35" fill="#2a6828"/><circle cx="65" cy="90" r="46" fill="#2a6828"/><circle cx="34" cy="110" r="33" fill="#4aaa48"/><circle cx="96" cy="110" r="33" fill="#4aaa48"/><circle cx="65" cy="86" r="44" fill="#54b850"/><circle cx="108" cy="95" r="15" fill="#80d060" opacity="0.55"/><circle cx="78" cy="68" r="19" fill="#80d060" opacity="0.5"/></svg>
+    <!-- Bushes foreground -->
+    <svg width="110" height="70" viewBox="0 0 110 70" style="position:absolute;bottom:47%;left:2%;z-index:7"><circle cx="29" cy="55" r="29" fill="#884010"/><circle cx="81" cy="55" r="29" fill="#884010"/><circle cx="55" cy="42" r="38" fill="#884010"/><circle cx="29" cy="50" r="27" fill="#cc6020"/><circle cx="81" cy="50" r="27" fill="#cc6020"/><circle cx="55" cy="37" r="36" fill="#e87830"/><circle cx="38" cy="23" r="16" fill="#f8a850" opacity="0.55"/></svg>
+    <svg width="82" height="54" viewBox="0 0 82 54" style="position:absolute;bottom:47%;left:25%;z-index:7"><circle cx="21" cy="43" r="21" fill="#145448"/><circle cx="61" cy="43" r="21" fill="#145448"/><circle cx="41" cy="31" r="28" fill="#145448"/><circle cx="21" cy="39" r="19" fill="#1e8870"/><circle cx="61" cy="39" r="19" fill="#1e8870"/><circle cx="41" cy="27" r="26" fill="#28a888"/><circle cx="28" cy="14" r="11" fill="#4ec8a8" opacity="0.55"/></svg>
+    <svg width="82" height="54" viewBox="0 0 82 54" style="position:absolute;bottom:47%;right:25%;z-index:7"><circle cx="21" cy="43" r="21" fill="#786010"/><circle cx="61" cy="43" r="21" fill="#786010"/><circle cx="41" cy="31" r="28" fill="#786010"/><circle cx="21" cy="39" r="19" fill="#bcaa18"/><circle cx="61" cy="39" r="19" fill="#bcaa18"/><circle cx="41" cy="27" r="26" fill="#d8c225"/><circle cx="28" cy="14" r="11" fill="#eeda40" opacity="0.55"/></svg>
+    <svg width="110" height="70" viewBox="0 0 110 70" style="position:absolute;bottom:47%;right:2%;z-index:7"><circle cx="29" cy="55" r="29" fill="#487010"/><circle cx="81" cy="55" r="29" fill="#487010"/><circle cx="55" cy="42" r="38" fill="#487010"/><circle cx="29" cy="50" r="27" fill="#80aa18"/><circle cx="81" cy="50" r="27" fill="#80aa18"/><circle cx="55" cy="37" r="36" fill="#9ecc22"/><circle cx="72" cy="23" r="16" fill="#bce038" opacity="0.55"/></svg>
+    <!-- Bushes ground level sides -->
+    <svg width="115" height="74" viewBox="0 0 115 74" style="position:absolute;bottom:35%;left:0;z-index:8"><circle cx="30" cy="58" r="30" fill="#145448"/><circle cx="85" cy="58" r="30" fill="#145448"/><circle cx="57" cy="44" r="40" fill="#145448"/><circle cx="30" cy="53" r="28" fill="#1e8870"/><circle cx="85" cy="53" r="28" fill="#1e8870"/><circle cx="57" cy="39" r="38" fill="#28a888"/><circle cx="40" cy="24" r="17" fill="#4ec8a8" opacity="0.55"/></svg>
+    <svg width="80" height="52" viewBox="0 0 80 52" style="position:absolute;bottom:35%;left:10%;z-index:8"><circle cx="20" cy="41" r="20" fill="#786010"/><circle cx="60" cy="41" r="20" fill="#786010"/><circle cx="40" cy="29" r="27" fill="#786010"/><circle cx="20" cy="37" r="18" fill="#bcaa18"/><circle cx="60" cy="37" r="18" fill="#bcaa18"/><circle cx="40" cy="25" r="25" fill="#d8c225"/><circle cx="28" cy="14" r="11" fill="#eeda40" opacity="0.55"/></svg>
+    <svg width="80" height="52" viewBox="0 0 80 52" style="position:absolute;bottom:35%;right:10%;z-index:8"><circle cx="20" cy="41" r="20" fill="#884010"/><circle cx="60" cy="41" r="20" fill="#884010"/><circle cx="40" cy="29" r="27" fill="#884010"/><circle cx="20" cy="37" r="18" fill="#cc6020"/><circle cx="60" cy="37" r="18" fill="#cc6020"/><circle cx="40" cy="25" r="25" fill="#e87830"/><circle cx="28" cy="14" r="11" fill="#f8a850" opacity="0.55"/></svg>
+    <svg width="115" height="74" viewBox="0 0 115 74" style="position:absolute;bottom:35%;right:0;z-index:8"><circle cx="30" cy="58" r="30" fill="#487010"/><circle cx="85" cy="58" r="30" fill="#487010"/><circle cx="57" cy="44" r="40" fill="#487010"/><circle cx="30" cy="53" r="28" fill="#80aa18"/><circle cx="85" cy="53" r="28" fill="#80aa18"/><circle cx="57" cy="39" r="38" fill="#9ecc22"/><circle cx="74" cy="24" r="17" fill="#bce038" opacity="0.55"/></svg>
+    <!-- Clouds -->
+    <div class="cloud" style="top:7%;left:8%;width:110px;height:38px"></div>
+    <div class="cloud" style="top:14%;left:52%;width:140px;height:44px"></div>
+    <div class="cloud" style="top:5%;left:72%;width:90px;height:30px"></div>
+    <img src="images/2.png" style="width:150px;height:150px;object-fit:contain">
+    <h1><span id="txt-title">Carrot Rain</span></h1>
+    <p id="txt-subtitle">Catch the carrots — don't let them fall!</p>
+    <p style="font-size:15px;opacity:0.75" id="txt-controls">← → arrows or tap the screen</p>
+    <div id="txt-best-start" style="display:flex;align-items:center;gap:10px;justify-content:center;font-size:20px;font-weight:bold;color:#ffe;text-shadow:1px 1px 5px rgba(0,0,0,0.4);min-height:32px"></div>
+    <button class="btn" onclick="startGame()" id="txt-play">Play!</button>
+    <div id="lang-switcher">
+      <button class="lang-btn active" onclick="setLang('en')">🇬🇧 EN</button>
+      <button class="lang-btn" onclick="setLang('ru')">🇷🇺 RU</button>
+      <button class="lang-btn" onclick="setLang('es')">🇪🇸 ES</button>
+      <button class="lang-btn" onclick="setLang('fr')">🇫🇷 FR</button>
+      <button class="lang-btn" onclick="setLang('de')">🇩🇪 DE</button>
+      <button class="lang-btn" onclick="setLang('zh')">🇨🇳 ZH</button>
+    </div>
+  </div>
+
+  <!-- Round complete screen -->
+  <div class="screen" id="rounddone-screen" style="display:none">
+    <!-- Trees -->
+    <svg width="195" height="243" viewBox="0 0 130 162" style="position:absolute;bottom:47%;left:0;z-index:2"><rect x="56" y="124" width="18" height="38" rx="5" fill="#a05030"/><circle cx="34" cy="114" r="35" fill="#2a6828"/><circle cx="96" cy="114" r="35" fill="#2a6828"/><circle cx="65" cy="90" r="46" fill="#2a6828"/><circle cx="34" cy="110" r="33" fill="#4aaa48"/><circle cx="96" cy="110" r="33" fill="#4aaa48"/><circle cx="65" cy="86" r="44" fill="#54b850"/><circle cx="21" cy="95" r="15" fill="#80d060" opacity="0.55"/><circle cx="52" cy="68" r="19" fill="#80d060" opacity="0.5"/></svg>
+    <svg width="78" height="218" viewBox="0 0 52 145" style="position:absolute;bottom:47%;left:10%;z-index:3"><rect x="21" y="116" width="10" height="29" rx="3" fill="#a05030"/><polygon points="26,6 2,116 50,116" fill="#246024"/><polygon points="26,6 4,96 48,96" fill="#38942a"/><polygon points="26,6 7,74 45,74" fill="#4ab838"/><polygon points="26,6 11,52 41,52" fill="#5aca44"/></svg>
+    <svg width="123" height="198" viewBox="0 0 82 132" style="position:absolute;bottom:47%;left:17%;z-index:4"><rect x="34" y="100" width="14" height="32" rx="4" fill="#c06838"/><circle cx="41" cy="77" r="43" fill="#2a6828"/><circle cx="41" cy="74" r="41" fill="#52aa4a"/><circle cx="28" cy="60" r="18" fill="#80cc58" opacity="0.55"/></svg>
+    <svg width="123" height="198" viewBox="0 0 82 132" style="position:absolute;bottom:47%;right:17%;z-index:4"><rect x="34" y="100" width="14" height="32" rx="4" fill="#c06838"/><circle cx="41" cy="77" r="43" fill="#4a7a15"/><circle cx="41" cy="74" r="41" fill="#88b820"/><circle cx="28" cy="60" r="18" fill="#aad030" opacity="0.55"/></svg>
+    <svg width="78" height="218" viewBox="0 0 52 145" style="position:absolute;bottom:47%;right:10%;z-index:3"><rect x="21" y="116" width="10" height="29" rx="3" fill="#a05030"/><polygon points="26,6 2,116 50,116" fill="#246024"/><polygon points="26,6 4,96 48,96" fill="#38942a"/><polygon points="26,6 7,74 45,74" fill="#4ab838"/><polygon points="26,6 11,52 41,52" fill="#5aca44"/></svg>
+    <svg width="195" height="243" viewBox="0 0 130 162" style="position:absolute;bottom:47%;right:0;z-index:2"><rect x="56" y="124" width="18" height="38" rx="5" fill="#a05030"/><circle cx="34" cy="114" r="35" fill="#2a6828"/><circle cx="96" cy="114" r="35" fill="#2a6828"/><circle cx="65" cy="90" r="46" fill="#2a6828"/><circle cx="34" cy="110" r="33" fill="#4aaa48"/><circle cx="96" cy="110" r="33" fill="#4aaa48"/><circle cx="65" cy="86" r="44" fill="#54b850"/><circle cx="108" cy="95" r="15" fill="#80d060" opacity="0.55"/><circle cx="78" cy="68" r="19" fill="#80d060" opacity="0.5"/></svg>
+    <!-- Bushes foreground -->
+    <svg width="110" height="70" viewBox="0 0 110 70" style="position:absolute;bottom:47%;left:2%;z-index:7"><circle cx="29" cy="55" r="29" fill="#884010"/><circle cx="81" cy="55" r="29" fill="#884010"/><circle cx="55" cy="42" r="38" fill="#884010"/><circle cx="29" cy="50" r="27" fill="#cc6020"/><circle cx="81" cy="50" r="27" fill="#cc6020"/><circle cx="55" cy="37" r="36" fill="#e87830"/><circle cx="38" cy="23" r="16" fill="#f8a850" opacity="0.55"/></svg>
+    <svg width="82" height="54" viewBox="0 0 82 54" style="position:absolute;bottom:47%;left:25%;z-index:7"><circle cx="21" cy="43" r="21" fill="#145448"/><circle cx="61" cy="43" r="21" fill="#145448"/><circle cx="41" cy="31" r="28" fill="#145448"/><circle cx="21" cy="39" r="19" fill="#1e8870"/><circle cx="61" cy="39" r="19" fill="#1e8870"/><circle cx="41" cy="27" r="26" fill="#28a888"/><circle cx="28" cy="14" r="11" fill="#4ec8a8" opacity="0.55"/></svg>
+    <svg width="82" height="54" viewBox="0 0 82 54" style="position:absolute;bottom:47%;right:25%;z-index:7"><circle cx="21" cy="43" r="21" fill="#786010"/><circle cx="61" cy="43" r="21" fill="#786010"/><circle cx="41" cy="31" r="28" fill="#786010"/><circle cx="21" cy="39" r="19" fill="#bcaa18"/><circle cx="61" cy="39" r="19" fill="#bcaa18"/><circle cx="41" cy="27" r="26" fill="#d8c225"/><circle cx="28" cy="14" r="11" fill="#eeda40" opacity="0.55"/></svg>
+    <svg width="110" height="70" viewBox="0 0 110 70" style="position:absolute;bottom:47%;right:2%;z-index:7"><circle cx="29" cy="55" r="29" fill="#487010"/><circle cx="81" cy="55" r="29" fill="#487010"/><circle cx="55" cy="42" r="38" fill="#487010"/><circle cx="29" cy="50" r="27" fill="#80aa18"/><circle cx="81" cy="50" r="27" fill="#80aa18"/><circle cx="55" cy="37" r="36" fill="#9ecc22"/><circle cx="72" cy="23" r="16" fill="#bce038" opacity="0.55"/></svg>
+    <div class="cloud" style="top:7%;left:8%;width:110px;height:38px"></div>
+    <div class="cloud" style="top:14%;left:52%;width:140px;height:44px"></div>
+    <img src="images/happy.png" style="width:280px;height:280px;object-fit:contain">
+    <h1 id="txt-rounddone">Round complete!</h1>
+    <p id="txt-round-num" style="font-size:28px;color:#ffcc00;font-weight:bold"></p>
+    <p id="txt-bonus" style="font-size:20px"></p>
+    <button class="btn" onclick="nextRound()" id="txt-nextround">Next Round</button>
+  </div>
+
+  <!-- Game over screen -->
+  <div class="screen" id="gameover-screen" style="display:none">
+    <!-- Trees -->
+    <svg width="195" height="243" viewBox="0 0 130 162" style="position:absolute;bottom:47%;left:0;z-index:2"><rect x="56" y="124" width="18" height="38" rx="5" fill="#a05030"/><circle cx="34" cy="114" r="35" fill="#2a6828"/><circle cx="96" cy="114" r="35" fill="#2a6828"/><circle cx="65" cy="90" r="46" fill="#2a6828"/><circle cx="34" cy="110" r="33" fill="#4aaa48"/><circle cx="96" cy="110" r="33" fill="#4aaa48"/><circle cx="65" cy="86" r="44" fill="#54b850"/><circle cx="21" cy="95" r="15" fill="#80d060" opacity="0.55"/><circle cx="52" cy="68" r="19" fill="#80d060" opacity="0.5"/></svg>
+    <svg width="78" height="218" viewBox="0 0 52 145" style="position:absolute;bottom:47%;left:10%;z-index:3"><rect x="21" y="116" width="10" height="29" rx="3" fill="#a05030"/><polygon points="26,6 2,116 50,116" fill="#246024"/><polygon points="26,6 4,96 48,96" fill="#38942a"/><polygon points="26,6 7,74 45,74" fill="#4ab838"/><polygon points="26,6 11,52 41,52" fill="#5aca44"/></svg>
+    <svg width="123" height="198" viewBox="0 0 82 132" style="position:absolute;bottom:47%;left:17%;z-index:4"><rect x="34" y="100" width="14" height="32" rx="4" fill="#c06838"/><circle cx="41" cy="77" r="43" fill="#2a6828"/><circle cx="41" cy="74" r="41" fill="#52aa4a"/><circle cx="28" cy="60" r="18" fill="#80cc58" opacity="0.55"/></svg>
+    <svg width="123" height="198" viewBox="0 0 82 132" style="position:absolute;bottom:47%;right:17%;z-index:4"><rect x="34" y="100" width="14" height="32" rx="4" fill="#c06838"/><circle cx="41" cy="77" r="43" fill="#4a7a15"/><circle cx="41" cy="74" r="41" fill="#88b820"/><circle cx="28" cy="60" r="18" fill="#aad030" opacity="0.55"/></svg>
+    <svg width="78" height="218" viewBox="0 0 52 145" style="position:absolute;bottom:47%;right:10%;z-index:3"><rect x="21" y="116" width="10" height="29" rx="3" fill="#a05030"/><polygon points="26,6 2,116 50,116" fill="#246024"/><polygon points="26,6 4,96 48,96" fill="#38942a"/><polygon points="26,6 7,74 45,74" fill="#4ab838"/><polygon points="26,6 11,52 41,52" fill="#5aca44"/></svg>
+    <svg width="195" height="243" viewBox="0 0 130 162" style="position:absolute;bottom:47%;right:0;z-index:2"><rect x="56" y="124" width="18" height="38" rx="5" fill="#a05030"/><circle cx="34" cy="114" r="35" fill="#2a6828"/><circle cx="96" cy="114" r="35" fill="#2a6828"/><circle cx="65" cy="90" r="46" fill="#2a6828"/><circle cx="34" cy="110" r="33" fill="#4aaa48"/><circle cx="96" cy="110" r="33" fill="#4aaa48"/><circle cx="65" cy="86" r="44" fill="#54b850"/><circle cx="108" cy="95" r="15" fill="#80d060" opacity="0.55"/><circle cx="78" cy="68" r="19" fill="#80d060" opacity="0.5"/></svg>
+    <!-- Bushes foreground -->
+    <svg width="110" height="70" viewBox="0 0 110 70" style="position:absolute;bottom:47%;left:2%;z-index:7"><circle cx="29" cy="55" r="29" fill="#884010"/><circle cx="81" cy="55" r="29" fill="#884010"/><circle cx="55" cy="42" r="38" fill="#884010"/><circle cx="29" cy="50" r="27" fill="#cc6020"/><circle cx="81" cy="50" r="27" fill="#cc6020"/><circle cx="55" cy="37" r="36" fill="#e87830"/><circle cx="38" cy="23" r="16" fill="#f8a850" opacity="0.55"/></svg>
+    <svg width="82" height="54" viewBox="0 0 82 54" style="position:absolute;bottom:47%;left:25%;z-index:7"><circle cx="21" cy="43" r="21" fill="#145448"/><circle cx="61" cy="43" r="21" fill="#145448"/><circle cx="41" cy="31" r="28" fill="#145448"/><circle cx="21" cy="39" r="19" fill="#1e8870"/><circle cx="61" cy="39" r="19" fill="#1e8870"/><circle cx="41" cy="27" r="26" fill="#28a888"/><circle cx="28" cy="14" r="11" fill="#4ec8a8" opacity="0.55"/></svg>
+    <svg width="82" height="54" viewBox="0 0 82 54" style="position:absolute;bottom:47%;right:25%;z-index:7"><circle cx="21" cy="43" r="21" fill="#786010"/><circle cx="61" cy="43" r="21" fill="#786010"/><circle cx="41" cy="31" r="28" fill="#786010"/><circle cx="21" cy="39" r="19" fill="#bcaa18"/><circle cx="61" cy="39" r="19" fill="#bcaa18"/><circle cx="41" cy="27" r="26" fill="#d8c225"/><circle cx="28" cy="14" r="11" fill="#eeda40" opacity="0.55"/></svg>
+    <svg width="110" height="70" viewBox="0 0 110 70" style="position:absolute;bottom:47%;right:2%;z-index:7"><circle cx="29" cy="55" r="29" fill="#487010"/><circle cx="81" cy="55" r="29" fill="#487010"/><circle cx="55" cy="42" r="38" fill="#487010"/><circle cx="29" cy="50" r="27" fill="#80aa18"/><circle cx="81" cy="50" r="27" fill="#80aa18"/><circle cx="55" cy="37" r="36" fill="#9ecc22"/><circle cx="72" cy="23" r="16" fill="#bce038" opacity="0.55"/></svg>
+    <div class="cloud" style="top:7%;left:8%;width:110px;height:38px"></div>
+    <div class="cloud" style="top:14%;left:52%;width:140px;height:44px"></div>
+    <img src="images/sad.png" style="width:280px;height:280px;object-fit:contain">
+    <h1 id="txt-gameover">Game Over!</h1>
+    <p id="txt-round-reached" style="font-size:20px;color:#ffcc00"></p>
+    <p><span id="txt-caught">Carrots caught:</span> <strong id="final-score" style="font-size:32px;color:#ffcc00">0</strong></p>
+    <p id="txt-newrecord" style="font-size:22px;color:#ffd700;font-weight:bold;min-height:28px"></p>
+    <div id="txt-best-gameover" style="display:flex;align-items:center;gap:10px;justify-content:center;font-size:20px;font-weight:bold;color:#ffe;text-shadow:1px 1px 5px rgba(0,0,0,0.4);min-height:32px"></div>
+    <button class="btn" onclick="startGame()" id="txt-again">Play Again!</button>
+  </div>
+
+</div>
+<script>
+const LANGS = {
+  en: {
+    title:       'Carrot Rain',
+    subtitle:    'Catch the carrots — don\'t let them fall!',
+    controls:    '← → arrows or tap the screen',
+    play:        'Play!',
+    gameover:    'Game Over!',
+    caught:      'Carrots caught:',
+    again:       'Play Again!',
+    round:       'Round',
+    rounddone:   'Round complete!',
+    nextround:   'Next Round',
+    target:      'Catch:',
+    best:        'Best',
+    newrecord:   '🎉 New record!',
+  },
+  ru: {
+    title:       'Морковный дождь',
+    subtitle:    'Лови морковки — не дай им упасть!',
+    controls:    '← → стрелки или касание экрана',
+    play:        'Играть!',
+    gameover:    'Игра окончена! 😢',
+    caught:      'Морковок поймано:',
+    again:       'Ещё раз!',
+    round:       'Раунд',
+    rounddone:   'Раунд пройден! 🎉',
+    nextround:   'Следующий раунд',
+    target:      'Поймай:',
+    best:        'Рекорд',
+    newrecord:   '🎉 Новый рекорд!',
+  },
+  es: {
+    title:       'Lluvia de Zanahorias',
+    subtitle:    '¡Atrapa las zanahorias — no las dejes caer!',
+    controls:    '← → flechas o toca la pantalla',
+    play:        '¡Jugar!',
+    gameover:    '¡Juego terminado! 😢',
+    caught:      'Zanahorias atrapadas:',
+    again:       '¡Otra vez!',
+    round:       'Ronda',
+    rounddone:   '¡Ronda completada! 🎉',
+    nextround:   'Siguiente ronda',
+    target:      'Atrapa:',
+    best:        'Récord',
+    newrecord:   '🎉 ¡Nuevo récord!',
+  },
+  fr: {
+    title:       'Pluie de Carottes',
+    subtitle:    'Attrape les carottes — ne les laisse pas tomber !',
+    controls:    '← → flèches ou toucher l\'écran',
+    play:        'Jouer !',
+    gameover:    'Jeu terminé ! 😢',
+    caught:      'Carottes attrapées :',
+    again:       'Rejouer !',
+    round:       'Manche',
+    rounddone:   'Manche terminée ! 🎉',
+    nextround:   'Manche suivante',
+    target:      'Attrape :',
+    best:        'Record',
+    newrecord:   '🎉 Nouveau record !',
+  },
+  de: {
+    title:       'Möhrenregen',
+    subtitle:    'Fang die Möhren — lass sie nicht fallen!',
+    controls:    '← → Pfeiltasten oder Bildschirm tippen',
+    play:        'Spielen!',
+    gameover:    'Spiel vorbei! 😢',
+    caught:      'Gefangene Möhren:',
+    again:       'Nochmal!',
+    round:       'Runde',
+    rounddone:   'Runde geschafft! 🎉',
+    nextround:   'Nächste Runde',
+    target:      'Fange:',
+    best:        'Rekord',
+    newrecord:   '🎉 Neuer Rekord!',
+  },
+  zh: {
+    title:       '胡萝卜雨',
+    subtitle:    '接住胡萝卜 — 不要让它们落地！',
+    controls:    '← → 方向键或点击屏幕',
+    play:        '开始游戏！',
+    gameover:    '游戏结束！😢',
+    caught:      '接住的胡萝卜：',
+    again:       '再玩一次！',
+    round:       '第',
+    rounddone:   '本轮完成！🎉',
+    nextround:   '下一轮',
+    target:      '目标：',
+    best:        '最高分',
+    newrecord:   '🎉 新纪录！',
+  },
+};
+
+let currentLang = 'en';
+
+function setLang(code) {
+  currentLang = code;
+  const t = LANGS[code];
+  document.getElementById('txt-title').textContent    = t.title;
+  document.getElementById('txt-subtitle').textContent = t.subtitle;
+  document.getElementById('txt-controls').textContent = t.controls;
+  document.getElementById('txt-play').textContent     = t.play;
+  document.getElementById('txt-gameover').textContent = t.gameover;
+  document.getElementById('txt-caught').textContent   = t.caught;
+  document.getElementById('txt-again').textContent    = t.again;
+  document.querySelectorAll('.lang-btn').forEach(b => {
+    b.classList.toggle('active', b.getAttribute('onclick').includes(`'${code}'`));
+  });
+  showBestOnStart();
+}
+
+const gameEl         = document.getElementById('game');
+const bunnyEl        = document.getElementById('bunny');
+const scoreEl        = document.getElementById('score');
+const livesEl        = document.getElementById('lives-display');
+const plusOne        = document.getElementById('plus-one');
+const startScreen    = document.getElementById('start-screen');
+const gameoverScreen = document.getElementById('gameover-screen');
+const finalScoreEl   = document.getElementById('final-score');
+
+const IMG = {
+  idle:   'images/1.png',
+  catch:  'images/2.png',
+  run:    'images/3.png',
+  stars1: 'images/bunny_stars1.png',
+  stars2: 'images/bunny_stars2.png',
+};
+
+const BUNNY_W    = 200;
+const CARROT_W   = 90;
+const ROCK_W     = 52;
+const CATCH_HALF = 100;
+
+const rounddoneScreen = document.getElementById('rounddone-screen');
+const targetEl        = document.getElementById('target');
+const roundDisplay    = document.getElementById('round-display');
+
+let bunnyX, score, lives, baseSpeed, round, roundScore, roundTarget;
+let carrots = [];
+let rocks = [];
+let keys = { left: false, right: false };
+let bunnyState = 'idle';
+let catchTimer = null;
+let hitInterval = null;
+let rafId, lastTime, spawnTimer, spawnInterval;
+let running = false;
+
+function roundTargetFor(r) { return 8 + r * 4; } // раунд 1=12, 2=16, 3=20...
+
+function W() { return gameEl.clientWidth; }
+function H() { return gameEl.clientHeight; }
+function groundY() { return H() * 0.82; }
+
+function startGame() {
+  startScreen.style.display     = 'none';
+  gameoverScreen.style.display  = 'none';
+  rounddoneScreen.style.display = 'none';
+
+  round = 1; score = 0; lives = 3;
+  roundScore = 0; roundTarget = roundTargetFor(round);
+  baseSpeed = 2.5;
+  bunnyX = W() / 2 - BUNNY_W / 2;
+  carrots.forEach(c => c.el.remove());
+  carrots = [];
+  rocks.forEach(r => r.el.remove());
+  rocks = [];
+  spawnTimer = 0; spawnInterval = 1900;
+  running = true;
+
+  updateHUD();
+  setState('idle');
+  bunnyEl.style.left = bunnyX + 'px';
+
+  if (rafId) cancelAnimationFrame(rafId);
+  lastTime = performance.now();
+  rafId = requestAnimationFrame(tick);
+}
+
+function nextRound() {
+  rounddoneScreen.style.display = 'none';
+  rocks.forEach(r => r.el.remove()); rocks = [];
+  carrots.forEach(c => c.el.remove()); carrots = [];
+  round++;
+  roundScore = 0;
+  roundTarget = roundTargetFor(round);
+  baseSpeed = 2.5 + round * 0.4;
+  spawnInterval = Math.max(700, 1900 - round * 150);
+  running = true;
+  updateHUD();
+  if (rafId) cancelAnimationFrame(rafId);
+  lastTime = performance.now();
+  rafId = requestAnimationFrame(tick);
+}
+
+function tick(now) {
+  if (!running) return;
+  const dt = Math.min(now - lastTime, 50);
+  lastTime = now;
+
+  const step = baseSpeed * 3.8 * (dt / 16);
+  if (keys.left) {
+    bunnyX = Math.max(0, bunnyX - step);
+    if (bunnyState !== 'catch') setState('run-left');
+  } else if (keys.right) {
+    bunnyX = Math.min(W() - BUNNY_W, bunnyX + step);
+    if (bunnyState !== 'catch') setState('run-right');
+  } else {
+    if (bunnyState !== 'catch') setState('idle');
+  }
+  bunnyEl.style.left = bunnyX + 'px';
+
+  spawnTimer += dt;
+  if (spawnTimer >= spawnInterval) {
+    if (round === 3 && roundScore >= roundTarget - 4) {
+      spawnTwoCarrots();
+    } else if (Math.random() < 0.10) {
+      spawnRock();
+    } else {
+      spawnCarrot();
+    }
+    spawnTimer = 0;
+    spawnInterval = Math.max(650, spawnInterval - 18);
+    updateCarrotOrder();
+  }
+
+  const gY             = groundY();
+  const bCx            = bunnyX + BUNNY_W / 2;
+  const roundSpeedMult = Math.min(1, 0.45 + (roundScore / roundTarget) * 0.55);
+  const fallSpeed      = baseSpeed * 2.5 * (dt / 16) * roundSpeedMult;
+
+  for (let i = carrots.length - 1; i >= 0; i--) {
+    const c = carrots[i];
+    c.y += fallSpeed;
+    c.el.style.top = c.y + 'px';
+
+    const cCx = c.x + CARROT_W / 2;
+
+    if (c.y + CARROT_W >= gY - 35 && c.y < gY + 30) {
+      if (Math.abs(cCx - bCx) < CATCH_HALF) {
+        if (round < 4 || i === 0) {
+          c.el.remove();
+          carrots.splice(i, 1);
+          score++;
+          roundScore++;
+          showPlus(c.x, c.y);
+          setState('catch');
+          updateHUD();
+          updateCarrotOrder();
+          if (roundScore >= roundTarget) { completeRound(); return; }
+        }
+        continue;
+      }
+    }
+
+    if (c.y > H() + 10) {
+      c.el.remove();
+      carrots.splice(i, 1);
+      if (round < 4 || i === 0) {
+        lives--;
+        updateHUD();
+        if (lives <= 0) { endGame(); return; }
+      }
+      updateCarrotOrder();
+    }
+  }
+
+  for (let i = rocks.length - 1; i >= 0; i--) {
+    const r = rocks[i];
+    r.y += fallSpeed * 0.85;
+    r.el.style.top = r.y + 'px';
+    const rCx = r.x + ROCK_W / 2;
+    if (r.y + ROCK_W >= gY - 35 && r.y < gY + 30) {
+      if (Math.abs(rCx - bCx) < CATCH_HALF) {
+        r.el.remove();
+        rocks.splice(i, 1);
+        lives--;
+        showMinus(r.x, r.y);
+        setState('hit');
+        updateHUD();
+        if (lives <= 0) { endGame(); return; }
+        continue;
+      }
+    }
+    if (r.y > H() + 10) {
+      r.el.remove();
+      rocks.splice(i, 1);
+    }
+  }
+
+  rafId = requestAnimationFrame(tick);
+}
+
+function spawnRock() {
+  const x = 15 + Math.random() * (W() - ROCK_W - 30);
+  const el = document.createElement('img');
+  el.src = 'images/stone.png';
+  el.className = 'rock';
+  el.style.left = x + 'px';
+  el.style.top  = '-60px';
+  el.style.transform = `rotate(${(Math.random() - 0.5) * 25}deg)`;
+  gameEl.appendChild(el);
+  rocks.push({ x, y: -60, el });
+}
+
+function showStars() {
+  const headX = bunnyX + BUNNY_W / 2;
+  const headY = H() * 0.88 - 148;
+  const cont = document.createElement('div');
+  cont.className = 'stars-container';
+  cont.style.left = headX + 'px';
+  cont.style.top  = headY + 'px';
+  for (let i = 0; i < 4; i++) {
+    const s = document.createElement('span');
+    s.textContent = '★';
+    s.style.setProperty('--i', i);
+    cont.appendChild(s);
+  }
+  gameEl.appendChild(cont);
+  setTimeout(() => cont.remove(), 1400);
+}
+
+function showMinus(x, y) {
+  const el = document.createElement('div');
+  el.textContent = '-1 🥕';
+  el.style.cssText = `position:absolute;left:${x}px;top:${y - 10}px;font-size:26px;font-weight:bold;color:#ff2222;z-index:50;pointer-events:none;text-shadow:1px 1px 4px rgba(0,0,0,0.5);transition:top 0.6s,opacity 0.6s`;
+  gameEl.appendChild(el);
+  setTimeout(() => { el.style.top = (y - 70) + 'px'; el.style.opacity = '0'; }, 30);
+  setTimeout(() => el.remove(), 700);
+}
+
+function spawnCarrot(forceX) {
+  const x = forceX !== undefined ? forceX : 15 + Math.random() * (W() - CARROT_W - 30);
+  const el = document.createElement('img');
+  el.src = 'images/carrot.png';
+  el.className = 'carrot';
+  el.style.left = x + 'px';
+  el.style.top  = '-60px';
+  el.style.transform = `rotate(${(Math.random() - 0.5) * 30}deg)`;
+  gameEl.appendChild(el);
+  carrots.push({ x, y: -60, el });
+}
+
+function spawnTwoCarrots() {
+  const half = Math.floor(W() / 2);
+  const gap  = 40;
+  const x1 = 15 + Math.random() * (half - CARROT_W - gap);
+  const x2 = half + gap + Math.random() * (half - CARROT_W - gap - 15);
+  spawnCarrot(x1);
+  spawnCarrot(x2);
+}
+
+function showPlus(x, y) {
+  plusOne.style.transition = 'none';
+  plusOne.style.left    = (x + 20) + 'px';
+  plusOne.style.top     = (y - 10) + 'px';
+  plusOne.style.opacity = '1';
+  plusOne.offsetHeight;
+  plusOne.style.transition = 'top 0.7s ease-out, opacity 0.7s ease-in';
+  plusOne.style.top     = (y - 65) + 'px';
+  plusOne.style.opacity = '0';
+}
+
+function quitGame() {
+  running = false;
+  cancelAnimationFrame(rafId);
+  carrots.forEach(c => c.el.remove());
+  carrots = [];
+  rounddoneScreen.style.display  = 'none';
+  gameoverScreen.style.display   = 'none';
+  startScreen.style.display      = 'flex';
+  showBestOnStart();
+}
+
+function completeRound() {
+  running = false;
+  cancelAnimationFrame(rafId);
+  carrots.forEach(c => c.el.remove());
+  carrots = [];
+  if (round % 5 === 0 && lives < 5) lives++;
+  const t = LANGS[currentLang];
+  document.getElementById('txt-rounddone').textContent  = t.rounddone;
+  document.getElementById('txt-nextround').textContent  = t.nextround;
+  document.getElementById('txt-round-num').textContent  = `${t.round} ${round} ✓`;
+  document.getElementById('txt-bonus').textContent      = '';
+  rounddoneScreen.style.display = 'flex';
+  updateHUD();
+}
+
+function endGame() {
+  running = false;
+  finalScoreEl.textContent = score;
+  const t = LANGS[currentLang];
+  document.getElementById('txt-gameover').textContent      = t.gameover;
+  document.getElementById('txt-caught').textContent        = t.caught;
+  document.getElementById('txt-again').textContent         = t.again;
+  document.getElementById('txt-round-reached').textContent = `${t.round} ${round}`;
+  const isNew = saveBest(score, round);
+  const best  = loadBest();
+  document.getElementById('txt-newrecord').textContent    = isNew ? t.newrecord : '';
+  document.getElementById('txt-best-gameover').innerHTML = best ? `<img src="images/trophy.png" style="width:52px;height:52px;object-fit:contain"> ${t.best}: ${best.score} (${t.round} ${best.round})` : '';
+  gameoverScreen.style.display = 'flex';
+  carrots.forEach(c => c.el.remove());
+  carrots = [];
+}
+
+function updateHUD() {
+  scoreEl.textContent  = roundScore;
+  targetEl.textContent = roundTarget;
+  const t = LANGS[currentLang];
+  roundDisplay.textContent = `${t.round} ${round}`;
+  livesEl.innerHTML = '<img src="images/life.png" style="width:42px;height:42px;object-fit:contain">'.repeat(Math.max(0, lives));
+}
+
+function setState(s) {
+  if (bunnyState === s) return;
+  bunnyState = s;
+  if (s === 'idle') {
+    bunnyEl.src = IMG.idle;
+    bunnyEl.style.transform = 'none';
+  } else if (s === 'run-left') {
+    bunnyEl.src = IMG.run;
+    bunnyEl.style.transform = 'scaleX(-1)';
+  } else if (s === 'run-right') {
+    bunnyEl.src = IMG.run;
+    bunnyEl.style.transform = 'none';
+  } else if (s === 'catch') {
+    bunnyEl.src = IMG.catch;
+    bunnyEl.style.transform = 'none';
+    if (catchTimer) clearTimeout(catchTimer);
+    catchTimer = setTimeout(() => {
+      bunnyState = null;
+      setState(keys.left ? 'run-left' : keys.right ? 'run-right' : 'idle');
+    }, 380);
+  } else if (s === 'hit') {
+    if (catchTimer) { clearTimeout(catchTimer); catchTimer = null; }
+    if (hitInterval) { clearInterval(hitInterval); hitInterval = null; }
+    let tog = false;
+    bunnyEl.src = IMG.stars1;
+    bunnyEl.style.transform = 'none';
+    hitInterval = setInterval(() => {
+      tog = !tog;
+      bunnyEl.src = tog ? IMG.stars2 : IMG.stars1;
+    }, 130);
+    catchTimer = setTimeout(() => {
+      clearInterval(hitInterval); hitInterval = null;
+      bunnyState = null;
+      setState(keys.left ? 'run-left' : keys.right ? 'run-right' : 'idle');
+    }, 650);
+  }
+}
+
+function updateCarrotOrder() {
+  carrots.forEach((c, i) => {
+    c.el.classList.remove('carrot-active', 'carrot-dim');
+    if (round >= 4) {
+      if (i === 0) c.el.classList.add('carrot-active');
+      else         c.el.classList.add('carrot-dim');
+    }
+  });
+}
+
+function loadBest() {
+  try { return JSON.parse(localStorage.getItem('carrotrain_best')) || null; } catch { return null; }
+}
+
+function saveBest(s, r) {
+  const prev = loadBest();
+  if (!prev || s > prev.score) {
+    localStorage.setItem('carrotrain_best', JSON.stringify({ score: s, round: r }));
+    return true;
+  }
+  return false;
+}
+
+function showBestOnStart() {
+  const el = document.getElementById('txt-best-start');
+  const best = loadBest();
+  const t = LANGS[currentLang];
+  el.innerHTML = best ? `<img src="images/trophy.png" style="width:52px;height:52px;object-fit:contain"> ${t.best}: ${best.score} (${t.round} ${best.round})` : '';
+}
+
+// Init
+round = 1; lives = 3; score = 0; roundScore = 0; roundTarget = roundTargetFor(1); updateHUD();
+showBestOnStart();
+
+// Keyboard
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowLeft'  || e.key === 'a') keys.left  = true;
+  if (e.key === 'ArrowRight' || e.key === 'd') keys.right = true;
+});
+document.addEventListener('keyup', e => {
+  if (e.key === 'ArrowLeft'  || e.key === 'a') keys.left  = false;
+  if (e.key === 'ArrowRight' || e.key === 'd') keys.right = false;
+});
+
+// Touch
+gameEl.addEventListener('touchstart', e => {
+  Array.from(e.touches).forEach(t => {
+    if (t.clientX < W() / 2) keys.left  = true;
+    else                       keys.right = true;
+  });
+}, { passive: true });
+
+gameEl.addEventListener('touchend', e => {
+  if (e.touches.length === 0) { keys.left = keys.right = false; return; }
+  keys.left = keys.right = false;
+  Array.from(e.touches).forEach(t => {
+    if (t.clientX < W() / 2) keys.left  = true;
+    else                       keys.right = true;
+  });
+}, { passive: true });
+</script>
+</body>
+</html>
