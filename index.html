@@ -675,7 +675,7 @@ function tick(now) {
   if (spawnTimer >= spawnInterval) {
     if (round === 3 && roundScore >= roundTarget - 4) {
       spawnTwoCarrots();
-    } else if (Math.random() < 0.10) {
+    } else if (Math.random() < 0.05) {
       spawnRock();
     } else {
       spawnCarrot();
