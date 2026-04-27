@@ -280,6 +280,34 @@ body {
   z-index: 50;
   opacity: 0;
 }
+
+#pause-screen {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.52);
+  z-index: 150;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+}
+#pause-screen .pause-icon {
+  font-size: 72px;
+  line-height: 1;
+}
+.btn-home {
+  background: rgba(255,255,255,0.22);
+  color: white;
+  border: 2.5px solid rgba(255,255,255,0.6);
+  border-radius: 35px;
+  padding: 14px 44px;
+  font-size: 22px;
+  font-weight: bold;
+  cursor: pointer;
+  font-family: inherit;
+}
+.btn-home:active { transform: scale(0.95); }
 </style>
 </head>
 <body>
@@ -364,7 +392,16 @@ body {
       <div class="hud-box" style="justify-content:center;font-size:18px;opacity:0.9" id="round-display">Round 1</div>
       <div class="hud-box" id="lives-display"></div>
     </div>
-    <button onclick="quitGame()" style="background:rgba(0,0,0,0.35);border:none;border-radius:50%;width:48px;height:48px;font-size:22px;cursor:pointer;color:white;line-height:1">✕</button>
+    <div style="display:flex;gap:8px">
+      <button id="pause-btn" onclick="togglePause()" style="background:rgba(0,0,0,0.35);border:none;border-radius:50%;width:48px;height:48px;font-size:20px;cursor:pointer;color:white;line-height:1">⏸</button>
+      <button onclick="quitGame()" style="background:rgba(0,0,0,0.35);border:none;border-radius:50%;width:48px;height:48px;font-size:22px;cursor:pointer;color:white;line-height:1">✕</button>
+    </div>
+  </div>
+
+  <div id="pause-screen">
+    <div class="pause-icon">⏸</div>
+    <button class="btn" id="txt-resume" onclick="togglePause()">▶ Resume</button>
+    <button class="btn-home" id="txt-home-pause" onclick="quitGame()">Home</button>
   </div>
 
   <img id="bunny" src="images/1.png" alt="bunny">
@@ -454,7 +491,10 @@ body {
     <p><span id="txt-caught">Carrots caught:</span> <strong id="final-score" style="font-size:32px;color:#ffcc00">0</strong></p>
     <p id="txt-newrecord" style="font-size:22px;color:#ffd700;font-weight:bold;min-height:28px"></p>
     <div id="txt-best-gameover" style="display:flex;align-items:center;gap:10px;justify-content:center;font-size:20px;font-weight:bold;color:#ffe;text-shadow:1px 1px 5px rgba(0,0,0,0.4);min-height:32px"></div>
-    <button class="btn" onclick="startGame()" id="txt-again">Play Again!</button>
+    <div style="display:flex;gap:14px;flex-wrap:wrap;justify-content:center">
+      <button class="btn" onclick="startGame()" id="txt-again">Play Again!</button>
+      <button class="btn-home" onclick="goHome()" id="txt-home-gameover">Home</button>
+    </div>
   </div>
 
 </div>
@@ -468,6 +508,8 @@ const LANGS = {
     gameover:    'Game Over!',
     caught:      'Carrots caught:',
     again:       'Play Again!',
+    home:        'Home',
+    resume:      '▶ Resume',
     round:       'Round',
     rounddone:   'Round complete!',
     nextround:   'Next Round',
@@ -483,6 +525,8 @@ const LANGS = {
     gameover:    'Игра окончена!',
     caught:      'Морковок поймано:',
     again:       'Ещё раз!',
+    home:        'Главная',
+    resume:      '▶ Продолжить',
     round:       'Раунд',
     rounddone:   'Раунд пройден!',
     nextround:   'Следующий раунд',
@@ -498,6 +542,8 @@ const LANGS = {
     gameover:    '¡Juego terminado!',
     caught:      'Zanahorias atrapadas:',
     again:       '¡Otra vez!',
+    home:        'Inicio',
+    resume:      '▶ Reanudar',
     round:       'Ronda',
     rounddone:   '¡Ronda completada!',
     nextround:   'Siguiente ronda',
@@ -513,6 +559,8 @@ const LANGS = {
     gameover:    'Jeu terminé !',
     caught:      'Carottes attrapées :',
     again:       'Rejouer !',
+    home:        'Accueil',
+    resume:      '▶ Reprendre',
     round:       'Manche',
     rounddone:   'Manche terminée !',
     nextround:   'Manche suivante',
@@ -528,6 +576,8 @@ const LANGS = {
     gameover:    'Spiel vorbei!',
     caught:      'Gefangene Möhren:',
     again:       'Nochmal!',
+    home:        'Start',
+    resume:      '▶ Weiter',
     round:       'Runde',
     rounddone:   'Runde geschafft!',
     nextround:   'Nächste Runde',
@@ -543,6 +593,8 @@ const LANGS = {
     gameover:    '游戏结束！',
     caught:      '接住的胡萝卜：',
     again:       '再玩一次！',
+    home:        '主页',
+    resume:      '▶ 继续',
     round:       '第',
     rounddone:   '本轮完成！',
     nextround:   '下一轮',
@@ -557,13 +609,16 @@ let currentLang = 'en';
 function setLang(code) {
   currentLang = code;
   const t = LANGS[code];
-  document.getElementById('txt-title').textContent    = t.title;
-  document.getElementById('txt-subtitle').textContent = t.subtitle;
-  document.getElementById('txt-controls').textContent = t.controls;
-  document.getElementById('txt-play').textContent     = t.play;
-  document.getElementById('txt-gameover').textContent = t.gameover;
-  document.getElementById('txt-caught').textContent   = t.caught;
-  document.getElementById('txt-again').textContent    = t.again;
+  document.getElementById('txt-title').textContent       = t.title;
+  document.getElementById('txt-subtitle').textContent    = t.subtitle;
+  document.getElementById('txt-controls').textContent    = t.controls;
+  document.getElementById('txt-play').textContent        = t.play;
+  document.getElementById('txt-gameover').textContent    = t.gameover;
+  document.getElementById('txt-caught').textContent      = t.caught;
+  document.getElementById('txt-again').textContent       = t.again;
+  document.getElementById('txt-resume').textContent      = t.resume;
+  document.getElementById('txt-home-pause').textContent  = t.home;
+  document.getElementById('txt-home-gameover').textContent = t.home;
   document.querySelectorAll('.lang-btn').forEach(b => {
     b.classList.toggle('active', b.getAttribute('onclick').includes(`'${code}'`));
   });
@@ -606,6 +661,7 @@ let catchTimer = null;
 let hitInterval = null;
 let rafId, lastTime, spawnTimer, spawnInterval;
 let running = false;
+let paused = false;
 
 function roundTargetFor(r) { return 8 + r * 4; } // раунд 1=12, 2=16, 3=20...
 
@@ -822,13 +878,41 @@ function showPlus(x, y) {
   plusOne.style.opacity = '0';
 }
 
+function togglePause() {
+  if (!running) return;
+  paused = !paused;
+  const ps = document.getElementById('pause-screen');
+  if (paused) {
+    cancelAnimationFrame(rafId);
+    ps.style.display = 'flex';
+    document.getElementById('pause-btn').textContent = '▶';
+  } else {
+    ps.style.display = 'none';
+    document.getElementById('pause-btn').textContent = '⏸';
+    lastTime = performance.now();
+    rafId = requestAnimationFrame(tick);
+  }
+}
+
+function goHome() {
+  paused = false;
+  document.getElementById('pause-screen').style.display = 'none';
+  document.getElementById('pause-btn').textContent = '⏸';
+  quitGame();
+}
+
 function quitGame() {
   running = false;
+  paused = false;
   cancelAnimationFrame(rafId);
   carrots.forEach(c => c.el.remove());
   carrots = [];
+  rocks.forEach(r => r.el.remove());
+  rocks = [];
   rounddoneScreen.style.display  = 'none';
   gameoverScreen.style.display   = 'none';
+  document.getElementById('pause-screen').style.display = 'none';
+  document.getElementById('pause-btn').textContent = '⏸';
   startScreen.style.display      = 'flex';
   showBestOnStart();
 }
@@ -952,6 +1036,8 @@ showBestOnStart();
 
 // Keyboard
 document.addEventListener('keydown', e => {
+  if (e.key === ' ') { e.preventDefault(); if (running) togglePause(); return; }
+  if (paused) return;
   if (e.key === 'ArrowLeft'  || e.key === 'a') keys.left  = true;
   if (e.key === 'ArrowRight' || e.key === 'd') keys.right = true;
 });
@@ -962,6 +1048,7 @@ document.addEventListener('keyup', e => {
 
 // Touch
 gameEl.addEventListener('touchstart', e => {
+  if (paused) return;
   Array.from(e.touches).forEach(t => {
     if (t.clientX < W() / 2) keys.left  = true;
     else                       keys.right = true;
