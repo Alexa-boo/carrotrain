@@ -843,6 +843,7 @@ function completeRound() {
   document.getElementById('txt-nextround').textContent  = t.nextround;
   document.getElementById('txt-round-num').textContent  = `${t.round} ${round} ✓`;
   document.getElementById('txt-bonus').textContent      = '';
+  lives = 3;
   rounddoneScreen.style.display = 'flex';
   updateHUD();
 }
