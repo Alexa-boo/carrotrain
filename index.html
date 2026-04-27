@@ -677,9 +677,7 @@ function tick(now) {
   spawnTimer += dt;
   if (spawnTimer >= spawnInterval) {
     const maxRocks = round - 1;
-    if (round === 3 && roundScore >= roundTarget - 4) {
-      spawnTwoCarrots();
-    } else if (rocksSpawnedThisRound < maxRocks && Math.random() < 0.25) {
+    if (rocksSpawnedThisRound < maxRocks && Math.random() < 0.25) {
       spawnRock();
       rocksSpawnedThisRound++;
     } else {
@@ -812,13 +810,6 @@ function spawnCarrot(forceX) {
   carrots.push({ x, y: -60, el });
 }
 
-function spawnTwoCarrots() {
-  const half = Math.floor(W() / 2);
-  const x1 = 20 + Math.random() * (half - CARROT_W - 20);
-  const x2 = half + 10 + Math.random() * (half - CARROT_W - 30);
-  spawnCarrot(x1);
-  spawnCarrot(x2);
-}
 
 function showPlus(x, y) {
   plusOne.style.transition = 'none';
