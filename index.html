@@ -936,14 +936,14 @@ function endGame() {
   running = false;
   finalScoreEl.textContent = score;
   const t = LANGS[currentLang];
-  document.getElementById('txt-gameover').textContent      = t.gameover;
   document.getElementById('txt-caught').textContent        = t.caught;
   document.getElementById('txt-again').textContent         = t.again;
   document.getElementById('txt-round-reached').textContent = `${t.round} ${round}`;
   const isNew = saveBest(score, round);
   const best  = loadBest();
+  document.getElementById('txt-gameover').textContent      = isNew ? t.newrecord : t.gameover;
   document.getElementById('gameover-bunny').src = isNew ? 'images/bunny_trophy.png' : 'images/sad.png';
-  document.getElementById('txt-newrecord').textContent    = isNew ? t.newrecord : '';
+  document.getElementById('txt-newrecord').textContent    = '';
   document.getElementById('txt-best-gameover').innerHTML = best ? `<img src="images/trophy.png" style="width:52px;height:52px;object-fit:contain"> ${t.best}: ${best.score} (${t.round} ${best.round})` : '';
   gameoverScreen.style.display = 'flex';
   carrots.forEach(c => c.el.remove());
