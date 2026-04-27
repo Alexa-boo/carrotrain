@@ -736,6 +736,8 @@ function tick(now) {
         rocks.splice(i, 1);
         lives--;
         showMinus(r.x, r.y);
+        plusOne.style.transition = 'none';
+        plusOne.style.opacity = '0';
         setState('hit');
         updateHUD();
         if (lives <= 0) { endGame(); return; }
@@ -857,7 +859,7 @@ function endGame() {
   document.getElementById('txt-round-reached').textContent = `${t.round} ${round}`;
   const isNew = saveBest(score, round);
   const best  = loadBest();
-  document.getElementById('gameover-bunny').src = isNew ? 'images/bunny_trophy.png' : 'images/sad.png';
+  document.getElementById('gameover-bunny').src = isNew ? 'images/bunny_trophy.png' : 'images/2.png';
   document.getElementById('txt-newrecord').textContent    = isNew ? t.newrecord : '';
   document.getElementById('txt-best-gameover').innerHTML = best ? `<img src="images/trophy.png" style="width:52px;height:52px;object-fit:contain"> ${t.best}: ${best.score} (${t.round} ${best.round})` : '';
   gameoverScreen.style.display = 'flex';
