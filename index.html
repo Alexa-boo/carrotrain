@@ -847,7 +847,7 @@ function showStars() {
 
 function showMinus(x, y) {
   const el = document.createElement('div');
-  el.textContent = '-1 🥕';
+  el.textContent = '-1';
   el.style.cssText = `position:absolute;left:${x}px;top:${y - 10}px;font-size:26px;font-weight:bold;color:#ff2222;z-index:50;pointer-events:none;text-shadow:1px 1px 4px rgba(0,0,0,0.5);transition:top 0.6s,opacity 0.6s`;
   gameEl.appendChild(el);
   setTimeout(() => { el.style.top = (y - 70) + 'px'; el.style.opacity = '0'; }, 30);
