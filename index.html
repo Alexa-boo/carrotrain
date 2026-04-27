@@ -648,7 +648,7 @@ function nextRound() {
   lives = 3;
   rocksSpawnedThisRound = 0;
   roundTarget = roundTargetFor(round);
-  baseSpeed = 2.5 + round * 0.4;
+  baseSpeed = 2.5 + round * 0.2;
   spawnInterval = Math.max(700, 1900 - round * 150);
   running = true;
   updateHUD();
@@ -813,10 +813,9 @@ function spawnCarrot(forceX) {
 }
 
 function spawnTwoCarrots() {
-  const half = Math.floor(W() / 2);
-  const gap  = 40;
-  const x1 = 15 + Math.random() * (half - CARROT_W - gap);
-  const x2 = half + gap + Math.random() * (half - CARROT_W - gap - 15);
+  const w  = W();
+  const x1 = 20 + Math.random() * (w * 0.25 - CARROT_W);
+  const x2 = w * 0.6 + Math.random() * (w * 0.25 - CARROT_W);
   spawnCarrot(x1);
   spawnCarrot(x2);
 }
