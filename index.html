@@ -643,6 +643,7 @@ function nextRound() {
   carrots.forEach(c => c.el.remove()); carrots = [];
   round++;
   roundScore = 0;
+  lives = 3;
   roundTarget = roundTargetFor(round);
   baseSpeed = 2.5 + round * 0.4;
   spawnInterval = Math.max(700, 1900 - round * 150);
@@ -689,6 +690,34 @@ function tick(now) {
   const roundSpeedMult = Math.min(1, 0.45 + (roundScore / roundTarget) * 0.55);
   const fallSpeed      = baseSpeed * 2.5 * (dt / 16) * roundSpeedMult;
 
+  let hitThisFrame = false;
+
+  for (let i = rocks.length - 1; i >= 0; i--) {
+    const r = rocks[i];
+    r.y += fallSpeed * 0.85;
+    r.el.style.top = r.y + 'px';
+    const rCx = r.x + ROCK_W / 2;
+    if (r.y + ROCK_W >= gY - 35 && r.y < gY + 30) {
+      if (Math.abs(rCx - bCx) < CATCH_HALF) {
+        r.el.remove();
+        rocks.splice(i, 1);
+        lives--;
+        showMinus(r.x, r.y);
+        hitThisFrame = true;
+        plusOne.style.transition = 'none';
+        plusOne.style.opacity = '0';
+        setState('hit');
+        updateHUD();
+        if (lives <= 0) { endGame(); return; }
+        continue;
+      }
+    }
+    if (r.y > H() + 10) {
+      r.el.remove();
+      rocks.splice(i, 1);
+    }
+  }
+
   for (let i = carrots.length - 1; i >= 0; i--) {
     const c = carrots[i];
     c.y += fallSpeed;
@@ -698,7 +727,7 @@ function tick(now) {
 
     if (c.y + CARROT_W >= gY - 35 && c.y < gY + 30) {
       if (Math.abs(cCx - bCx) < CATCH_HALF) {
-        if (round < 4 || i === 0) {
+        if (!hitThisFrame && (round < 4 || i === 0)) {
           c.el.remove();
           carrots.splice(i, 1);
           score++;
@@ -722,31 +751,6 @@ function tick(now) {
         if (lives <= 0) { endGame(); return; }
       }
       updateCarrotOrder();
-    }
-  }
-
-  for (let i = rocks.length - 1; i >= 0; i--) {
-    const r = rocks[i];
-    r.y += fallSpeed * 0.85;
-    r.el.style.top = r.y + 'px';
-    const rCx = r.x + ROCK_W / 2;
-    if (r.y + ROCK_W >= gY - 35 && r.y < gY + 30) {
-      if (Math.abs(rCx - bCx) < CATCH_HALF) {
-        r.el.remove();
-        rocks.splice(i, 1);
-        lives--;
-        showMinus(r.x, r.y);
-        plusOne.style.transition = 'none';
-        plusOne.style.opacity = '0';
-        setState('hit');
-        updateHUD();
-        if (lives <= 0) { endGame(); return; }
-        continue;
-      }
-    }
-    if (r.y > H() + 10) {
-      r.el.remove();
-      rocks.splice(i, 1);
     }
   }
 
@@ -839,7 +843,6 @@ function completeRound() {
   cancelAnimationFrame(rafId);
   carrots.forEach(c => c.el.remove());
   carrots = [];
-  if (round % 5 === 0 && lives < 5) lives++;
   const t = LANGS[currentLang];
   document.getElementById('txt-rounddone').textContent  = t.rounddone;
   document.getElementById('txt-nextround').textContent  = t.nextround;
