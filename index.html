@@ -599,6 +599,7 @@ const roundDisplay    = document.getElementById('round-display');
 let bunnyX, score, lives, baseSpeed, round, roundScore, roundTarget;
 let carrots = [];
 let rocks = [];
+let rocksSpawnedThisRound = 0;
 let keys = { left: false, right: false };
 let bunnyState = 'idle';
 let catchTimer = null;
@@ -619,6 +620,7 @@ function startGame() {
 
   round = 1; score = 0; lives = 3;
   roundScore = 0; roundTarget = roundTargetFor(round);
+  rocksSpawnedThisRound = 0;
   baseSpeed = 2.5;
   bunnyX = W() / 2 - BUNNY_W / 2;
   carrots.forEach(c => c.el.remove());
@@ -644,6 +646,7 @@ function nextRound() {
   round++;
   roundScore = 0;
   lives = 3;
+  rocksSpawnedThisRound = 0;
   roundTarget = roundTargetFor(round);
   baseSpeed = 2.5 + round * 0.4;
   spawnInterval = Math.max(700, 1900 - round * 150);
@@ -673,10 +676,12 @@ function tick(now) {
 
   spawnTimer += dt;
   if (spawnTimer >= spawnInterval) {
+    const maxRocks = round - 1;
     if (round === 3 && roundScore >= roundTarget - 4) {
       spawnTwoCarrots();
-    } else if (Math.random() < 0.05) {
+    } else if (rocksSpawnedThisRound < maxRocks && Math.random() < 0.25) {
       spawnRock();
+      rocksSpawnedThisRound++;
     } else {
       spawnCarrot();
     }
