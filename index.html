@@ -685,6 +685,9 @@ function startGame() {
   rocks = [];
   spawnTimer = 0; spawnInterval = 1900;
   running = true;
+  if (hitInterval) { clearInterval(hitInterval); hitInterval = null; }
+  if (catchTimer)  { clearTimeout(catchTimer);   catchTimer  = null; }
+  bunnyState = null;
 
   updateHUD();
   setState('idle');
@@ -765,6 +768,7 @@ function tick(now) {
         hitThisFrame = true;
         plusOne.style.transition = 'none';
         plusOne.style.opacity = '0';
+        showStars();
         setState('hit');
         updateHUD();
         if (lives <= 0) { endGame(); return; }
@@ -971,6 +975,7 @@ function setState(s) {
     bunnyEl.src = IMG.run;
     bunnyEl.style.transform = 'none';
   } else if (s === 'catch') {
+    if (bunnyState === 'hit') return;
     bunnyEl.src = IMG.catch;
     bunnyEl.style.transform = 'none';
     if (catchTimer) clearTimeout(catchTimer);
